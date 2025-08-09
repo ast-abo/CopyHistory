@@ -4,10 +4,12 @@ import copykitten
 import clipboard_monitor
 import threading
 from prettytable import PrettyTable
-from PIL import Image
+from PIL import Image, ImageGrab, ImageTk
 
 LastClip = None
 PauseMonitor = False
+Selection = None
+ImageData = []
 # ClipTable = PrettyTable["Text", Button]
 root = Tk()
 root.title("Copy Paste Utilities")
@@ -18,47 +20,71 @@ tabs = ttk.Notebook(root)
 tabs.pack(fill="both", expand=True)
 
 TextsFrame = ttk.Frame(tabs, padding="3 3 12 12")
-TextsFrame.grid(column=1, row=1, sticky=(N, W, E, S))
 TextList = Listbox(TextsFrame, height=6, width=25)
 TextList.pack(expand=True, fill='both', padx=10, pady=10)
 
 ImagesFrame = ttk.Frame(tabs, padding="3 3 12 12")
-ImagesFrame.grid(column=1, row=1, sticky=(N, W, E, S))
+ImageList = Listbox(ImagesFrame, height=6, width=25)
+ImageList.pack(side="left", expand=True, fill='both', padx=10, pady=10)
+
+ImageDisplay = Label(ImagesFrame)
+ImageDisplay.pack(side="right", expand=True, fill='both', padx=10, pady=10)
 
 tabs.add(TextsFrame, text="Texts")
 tabs.add(ImagesFrame, text="Images")
-ImageList = Listbox(ImagesFrame, height=6, width=25)
-ImageList.pack(expand=True, fill='both', padx=10, pady=10)
 
 def double_click_copy(event):
     idx = TextList.curselection()
     global PauseMonitor
+    print("test")
     if idx:
         PauseMonitor = True
         selected = TextList.get(idx[0])
         root.clipboard_clear()
         root.clipboard_append(selected)
-        root.after(1000, disable_pause)
+        root.after(2000, disable_pause)
 
 def disable_pause():
     global PauseMonitor
     PauseMonitor = False
 
-def handler(text):
+def text_handler(text):
     global LastClip
     global PauseMonitor
     if PauseMonitor:
         return
     
     if text != LastClip:
-        print("Got Clip", text)
         LastClip = text
         TextList.insert(0, text)
 
-clipboard_monitor.on_text(handler)
-clipboard_monitor.on_image(handler)
+def image_handler():
+    global PauseMonitor
+
+    if PauseMonitor:
+        return
+
+    CopiedImage = ImageGrab.grabclipboard()
+    ImageList.insert(0, Image)
+    ImageData.append(CopiedImage)
+
+def upd():
+    pass
+
+def on_select(event):
+    global Selection
+    Selection = ImageList.curselection()
+    img = ImageData[Selection[0]]
+    img_tk = ImageTk.PhotoImage(img)
+    ImageDisplay.config(image=img_tk)
+    ImageDisplay.image = img_tk
+
+clipboard_monitor.on_text(text_handler)
+clipboard_monitor.on_image(image_handler)
+clipboard_monitor.on_update(upd)
 monitor_thread = threading.Thread(target=clipboard_monitor.wait, daemon=True)
 
 monitor_thread.start()
 TextList.bind("<Double-Button-1>", double_click_copy)
+ImageList.bind("<<ListboxSelect>>", on_select)
 root.mainloop()
