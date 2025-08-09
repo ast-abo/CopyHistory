@@ -5,7 +5,6 @@ import clipboard_monitor
 import threading
 from prettytable import PrettyTable
 from PIL import Image
-from PIL import ImageGrab
 
 LastClip = None
 PauseMonitor = False
@@ -13,19 +12,23 @@ PauseMonitor = False
 root = Tk()
 root.title("Copy Paste Utilities")
 root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
+root.rowconfigure(1, weight=1)
 
 tabs = ttk.Notebook(root)
 tabs.pack(fill="both", expand=True)
 
-texts_list = Text(tabs)
-texts_list.pack(fill="both", expand=True)
+TextsFrame = ttk.Frame(tabs, padding="3 3 12 12")
+TextsFrame.grid(column=1, row=1, sticky=(N, W, E, S))
+TextList = Listbox(TextsFrame, height=6, width=25)
+TextList.pack(expand=True, fill='both', padx=10, pady=10)
 
-images_lists = Text(tabs)
-images_lists.pack(expand=True, fill='both', padx=10, pady=10)
+ImagesFrame = ttk.Frame(tabs, padding="3 3 12 12")
+ImagesFrame.grid(column=1, row=1, sticky=(N, W, E, S))
 
-tabs.add(texts_list, text="Texts")
-tabs.add(images_lists, text="Images")
+tabs.add(TextsFrame, text="Texts")
+tabs.add(ImagesFrame, text="Images")
+ImageList = Listbox(ImagesFrame, height=6, width=25)
+ImageList.pack(expand=True, fill='both', padx=10, pady=10)
 
 def double_click_copy(event):
     idx = TextList.curselection()
@@ -41,7 +44,7 @@ def disable_pause():
     global PauseMonitor
     PauseMonitor = False
 
-def handle_text(text):
+def handler(text):
     global LastClip
     global PauseMonitor
     if PauseMonitor:
@@ -51,22 +54,11 @@ def handle_text(text):
         print("Got Clip", text)
         LastClip = text
         TextList.insert(0, text)
-def handle_image():
-    print("image detected")
-    image = ImageGrab.grabclipboard()
-    if image:
-        image.save("clipboard.png")
-        ImageList.insert(0, "<Image from clipboard>")
 
-# fixes issue with image not being detected for some reason
-def onUpd():
-    pass
-
-clipboard_monitor.on_text(handle_text)
-clipboard_monitor.on_image(handle_image)
-clipboard_monitor.on_update(onUpd)
+clipboard_monitor.on_text(handler)
+clipboard_monitor.on_image(handler)
 monitor_thread = threading.Thread(target=clipboard_monitor.wait, daemon=True)
-monitor_thread.start()
 
+monitor_thread.start()
 TextList.bind("<Double-Button-1>", double_click_copy)
 root.mainloop()
