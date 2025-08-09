@@ -1,38 +1,72 @@
 from tkinter import *
 from tkinter import ttk
+import copykitten
+import clipboard_monitor
+import threading
+from prettytable import PrettyTable
+from PIL import Image
 
-def calculate(*args):
-    try:
-        value = float(feet.get())
-        meters.set(int(0.3048 * value * 10000.0 + 0.5)/10000.0)
-    except ValueError:
-        pass
-
+LastClip = None
+PauseMonitor = False
+# ClipTable = PrettyTable["Text", Button]
 root = Tk()
-root.title("Feet to Meters")
-
-mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+root.title("Copy Paste Utilities")
 root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
+root.rowconfigure(1, weight=1)
 
-feet = StringVar()
-feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
-feet_entry.grid(column=2, row=1, sticky=(W, E))
+tabs = ttk.Notebook(root)
+tabs.pack(fill="both", expand=True)
 
-meters = StringVar()
-ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
+TextsFrame = ttk.Frame(tabs, padding="3 3 12 12")
+TextsFrame.grid(column=1, row=1, sticky=(N, W, E, S))
+TextList = Listbox(TextsFrame, height=6, width=25)
+TextList.pack(expand=True, fill='both', padx=10, pady=10)
 
-ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
+ImagesFrame = ttk.Frame(tabs, padding="3 3 12 12")
+ImagesFrame.grid(column=1, row=1, sticky=(N, W, E, S))
 
-ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
-ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
-ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+tabs.add(TextsFrame, text="Texts")
+tabs.add(ImagesFrame, text="Images")
+ImageList = Listbox(ImagesFrame, height=6, width=25)
+ImageList.pack(expand=True, fill='both', padx=10, pady=10)
 
-for child in mainframe.winfo_children(): 
-    child.grid_configure(padx=5, pady=5)
+def double_click_copy(event):
+    idx = TextList.curselection()
+    global PauseMonitor
+    if idx:
+        PauseMonitor = True
+        selected = TextList.get(idx[0])
+        root.clipboard_clear()
+        root.clipboard_append(selected)
+        root.after(1000, disable_pause)
 
-feet_entry.focus()
-root.bind("<Return>", calculate)
+def disable_pause():
+    global PauseMonitor
+    PauseMonitor = False
 
+def handler(text):
+    global LastClip
+    global PauseMonitor
+    if PauseMonitor:
+        return
+    
+    if text != LastClip:
+        print("Got Clip", text)
+        LastClip = text
+        TextList.insert(0, text)
+
+clipboard_monitor.on_text(handler)
+clipboard_monitor.on_image(handler)
+monitor_thread = threading.Thread(target=clipboard_monitor.wait, daemon=True)
+
+monitor_thread.start()
+TextList.bind("<Double-Button-1>", double_click_copy)
 root.mainloop()
+
+
+
+
+
+
+# while True:
+#     wait(1)
