@@ -1,20 +1,15 @@
 from tkinter import *
 from tkinter import ttk
-import copykitten
 import clipboard_monitor
 import threading
-from prettytable import PrettyTable
 from PIL import Image, ImageGrab, ImageTk
 import memory
-import os
-import psutil
-import time
+import queue
 
 LastClip = None
 PauseMonitor = False
 Selection = None
 ImageData = []
-# ClipTable = PrettyTable["Text", Button]
 root = Tk()
 root.title("Copy Paste Utilities")
 root.columnconfigure(0, weight=1)
@@ -69,8 +64,8 @@ def image_handler():
         return
 
     CopiedImage = ImageGrab.grabclipboard()
-    ImageList.insert(0, Image)
-    ImageData.append(CopiedImage)
+    ImageList.insert(0, CopiedImage)
+    ImageData.insert(0, CopiedImage)
 
 def upd():
     pass
@@ -78,27 +73,28 @@ def upd():
 def on_select(event):
     global Selection
     Selection = ImageList.curselection()
-    img = ImageData[Selection[0]]
-    img_tk = ImageTk.PhotoImage(img)
-    ImageDisplay.config(image=img_tk)
-    ImageDisplay.image = img_tk
+    SelectedImage = ImageData[Selection[0]]
+    
+    width, height = SelectedImage.size # Get original dimensions
+    if width > 600 or height > 700:
+        # Calculate the ratio needed to resize to max_width
+        ratio = min(600 / width, 700 / height)
+        new_width = int(width * ratio)
+        new_height = int(height * ratio)
+        SelectedImage = SelectedImage.resize((new_width, new_height), Image.LANCZOS)
+        
+    TkinterImage = ImageTk.PhotoImage(SelectedImage)
+    ImageDisplay.config(image=TkinterImage)
+    ImageDisplay.image = TkinterImage
 
 clipboard_monitor.on_text(text_handler)
 clipboard_monitor.on_image(image_handler)
 clipboard_monitor.on_update(upd)
-monitor_thread = threading.Thread(target=clipboard_monitor.wait, daemon=True)
+ClipBoardMonitor = threading.Thread(target=clipboard_monitor.wait, daemon=True)
+MemoryMonitor = threading.Thread(target=memory.GetMemoryUse, daemon=True)
 
-monitor_thread.start()
+MemoryMonitor.start()
+ClipBoardMonitor.start()
 TextList.bind("<Double-Button-1>", double_click_copy)
 ImageList.bind("<<ListboxSelect>>", on_select)
-
-while True:
-    pid = os.getpid()  # Get the PID of the current Python script
-    process = psutil.Process(pid)
-    mem_info = process.memory_info()
-    print(f"Process RSS (Resident Set Size): {round(mem_info.rss / (1024**2), 2)} MB")
-    print(f"Process VMS (Virtual Memory Size): {round(mem_info.vms / (1024**2), 2)} MB")
-    pass
-
-
 root.mainloop()
