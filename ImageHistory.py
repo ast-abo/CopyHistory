@@ -10,7 +10,7 @@ ImageMemoryUsage = 0
 After = 0
 Before = 0
 
-def image_handler():
+def Handler():
     global LastImageClip, ImageMemoryUsage, Before, After
 
     Before = MemoryUsage()

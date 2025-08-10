@@ -8,7 +8,7 @@ TextMemoryUsage = 0
 After = 0
 Before = 0
 
-def text_handler(text):
+def Handler(text):
     global LastClip, Before, After, TextMemoryUsage
     Before = MemoryUsage()
     
@@ -17,12 +17,24 @@ def text_handler(text):
         TextList.insert(0, text)
         After = MemoryUsage()
         TextMemoryUsage += After - Before
-    while (ImageMemoryUsage > TextMemoryLimit and TextList.index("end") > 0):
+    while (TextMemoryUsage > TextMemoryLimit and TextList.index("end") > 0):
         Before = MemoryUsage()
         TextList.delete(END)
         gc.collect()
         After = MemoryUsage()
-        ImageMemoryUsage -= Before - After
+        TextMemoryUsage -= Before - After
 
-        if ImageMemoryUsage <= TextMemoryLimit * 0.8:
+        if TextMemoryUsage <= TextMemoryLimit * 0.8:
             break
+
+def double_click_copy(event):
+    idx = TextList.curselection()
+    global PauseMonitor
+    if idx:
+        PauseMonitor = True
+        selected = TextList.get(idx[0])
+        root.clipboard_clear()
+        root.clipboard_append(selected)
+        # root.after(1000, disable_pause)
+        
+TextList.bind("<Double-Button-1>", double_click_copy)

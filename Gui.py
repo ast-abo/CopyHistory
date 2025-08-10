@@ -21,7 +21,11 @@ ImageDisplay.pack(side="right", expand=True, fill='both', padx=10, pady=10)
 
 FilesFrame = ttk.Frame(tabs, padding="3 3 12 12")
 FileList = Listbox(FilesFrame, height=6, width=25)
-FileList.pack(expand=True, fill='both', padx=10, pady=10)
+FileList.pack(side="left", expand=True, fill='both', padx=10, pady=10)
+PasteTo = Label(FilesFrame)
+PasteTo.pack(side="right")
+OpenFileManager = Button(FilesFrame, text="Choose directory to paste to")
+OpenFileManager.pack(side="right")
 
 FavoritesFrame = ttk.Frame(tabs, padding="3 3 12 12")
 FavoriteList = Listbox(FavoritesFrame, height=6, width=25)

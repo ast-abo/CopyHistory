@@ -30,8 +30,8 @@ def on_select(event):
     ImageDisplay.config(image=ImageHistory.ImageData[Selection[0]])
     ImageDisplay.image = ImageHistory.ImageData[Selection[0]]
 
-clipboard_monitor.on_text(TextHistory.text_handler)
-clipboard_monitor.on_image(ImageHistory.image_handler)
+clipboard_monitor.on_text(TextHistory.Handler)
+clipboard_monitor.on_image(ImageHistory.Handler)
 clipboard_monitor.on_files(FileHistory.Handler)
 clipboard_monitor.on_update(upd)
 ClipBoardMonitor = threading.Thread(target=clipboard_monitor.wait, daemon=True)
