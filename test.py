@@ -5,6 +5,10 @@ import clipboard_monitor
 import threading
 from prettytable import PrettyTable
 from PIL import Image, ImageGrab, ImageTk
+import memory
+import os
+import psutil
+import time
 
 LastClip = None
 PauseMonitor = False
@@ -36,7 +40,7 @@ tabs.add(ImagesFrame, text="Images")
 def double_click_copy(event):
     idx = TextList.curselection()
     global PauseMonitor
-    print("test")
+
     if idx:
         PauseMonitor = True
         selected = TextList.get(idx[0])
@@ -87,4 +91,14 @@ monitor_thread = threading.Thread(target=clipboard_monitor.wait, daemon=True)
 monitor_thread.start()
 TextList.bind("<Double-Button-1>", double_click_copy)
 ImageList.bind("<<ListboxSelect>>", on_select)
+
+while True:
+    pid = os.getpid()  # Get the PID of the current Python script
+    process = psutil.Process(pid)
+    mem_info = process.memory_info()
+    print(f"Process RSS (Resident Set Size): {round(mem_info.rss / (1024**2), 2)} MB")
+    print(f"Process VMS (Virtual Memory Size): {round(mem_info.vms / (1024**2), 2)} MB")
+    pass
+
+
 root.mainloop()
