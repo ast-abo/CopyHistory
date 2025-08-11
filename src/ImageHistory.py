@@ -5,10 +5,12 @@ import numpy as np
 import cv2
 from Config import ImageMemoryLimit
 import hashlib
+from datetime import datetime
 
 ImageData = []
 LastImageClip = None
 ImageMemoryUsage = 0
+FavoriteCount = 0
 
 def Compress(Image):
     Array = np.array(Image, dtype=np.uint8)
@@ -23,7 +25,7 @@ def ImageHash(Image):
     return hashlib.md5(Image.tobytes()).hexdigest()
 
 def Handler():
-    global LastImageClip, ImageMemoryUsage
+    global LastImageClip, ImageMemoryUsage, FavoriteCount
 
     CopiedImage = ImageGrab.grabclipboard()
     if not isinstance(CopiedImage, Image.Image):
@@ -47,12 +49,17 @@ def Handler():
 
     CompressedImage = Compress(CopiedImage)
 
-    ImageList.insert(0, "Image")
-    ImageData.insert(0, [
+    ImageData.insert(FavoriteCount, [
         CompressedImage,
-        MegaBytes
+        MegaBytes,
+        False,
+        f"Image taken at: {datetime.now()}"
     ])
-
+    
+    ImageList.insert(FavoriteCount, ImageData[0][3])
+    ImageList.selection_clear(0, END)
+    ImageList.select_set(0)
+    ImageList.see(0)
     ImageMemoryUsage += len(CompressedImage) / (1024**2) + MegaBytes
     while (ImageMemoryUsage > ImageMemoryLimit and len(ImageData) > 0):
         Data = ImageData.pop()
@@ -63,7 +70,7 @@ def Handler():
         if ImageMemoryUsage <= ImageMemoryLimit * 0.8:
             break
 
-def double_click_copy(event):
+def DoubleClickCopy(event):
     idx = TextList.curselection()
     #global PauseMonitor
 
@@ -92,6 +99,35 @@ def OnSelect(event):
     ImageDisplay.config(image=TkinterImage)
     ImageDisplay.image = TkinterImage
 
+def SelectFavorite(Event=any):
+    global FavoriteCount
+
+    if Event is None:
+        return
+
+    ListIndex = ImageList.curselection()[0]
+    DataValue = ImageData[ListIndex]
+    IsFavorite = DataValue[2]
+    DataValue[2] = not IsFavorite
+
+    if IsFavorite:
+        print("Unfavorited")
+        FavoriteCount -= 1
+        del ImageData[ListIndex]
+        ImageList.delete(ListIndex)
+        ImageList.insert(FavoriteCount, DataValue[3])
+        ImageData.insert(FavoriteCount, DataValue)
+    else:
+        print("Favorited")
+        del ImageData[ListIndex]
+        ImageList.delete(ListIndex)
+        ImageList.insert(0, "*" + DataValue[3])
+        ImageData.insert(0, DataValue)
+        FavoriteCount += 1
+        pass
+    
+
 
 ImageList.bind("<<ListboxSelect>>", OnSelect)
-TextList.bind("<Double-Button-1>", double_click_copy)
+ImageList.bind("<Double-Button-1>", DoubleClickCopy)
+ImageList.bind("<f>", SelectFavorite)

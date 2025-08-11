@@ -27,11 +27,6 @@ PasteTo.pack(side="right")
 OpenFileManager = Button(FilesFrame, text="Choose directory to paste to")
 OpenFileManager.pack(side="right")
 
-FavoritesFrame = ttk.Frame(tabs, padding="3 3 12 12")
-FavoriteList = Listbox(FavoritesFrame, height=6, width=25)
-FavoriteList.pack(expand=True, fill='both', padx=10, pady=10)
-
 tabs.add(TextsFrame, text="Texts")
 tabs.add(ImagesFrame, text="Images")
 tabs.add(FilesFrame, text="Files")
-tabs.add(FavoritesFrame, text="Favorites")

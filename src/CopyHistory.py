@@ -3,13 +3,12 @@ import tracemalloc
 tracemalloc.start()
 
 import ImageHistory
-import TextHistory
 import FileHistory
+import TextHistory
 from Gui import *
 import clipboard_monitor
 import threading
 from Gui import *
-from Config import *
 
 Selection = None
 
@@ -24,4 +23,3 @@ ClipBoardMonitor = threading.Thread(target=clipboard_monitor.wait, daemon=True)
 ClipBoardMonitor.start()
 
 root.mainloop()
-

@@ -3,10 +3,11 @@ from tkinter import filedialog
 import shutil
 FileData = []
 
-def Handler(File):
-    FileData.insert(0, File[0])
-    FileList.insert(0, File[0])
-    pass
+def Handler(Files):
+    for File in Files:
+        FileData.insert(0, File)
+        FileList.insert(0, File)
+        pass
 
 def DoubleClickCopy(event):
     Index = FileList.curselection()

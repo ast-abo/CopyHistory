@@ -1,24 +1,28 @@
 from Gui import *
 from Config import TextMemoryLimit
 import gc
+import sys
 
 LastClip = None
 TextMemoryUsage = 0
 
 def Handler(text):
-    global LastClip, Before, After, TextMemoryUsage
+    global LastClip, TextMemoryUsage
     
     if text != LastClip:
         LastClip = text
         TextList.insert(0, text)
+        TextMemoryUsage += sys.getsizeof(text) / (1024**2)
+        
     while (TextMemoryUsage > TextMemoryLimit and TextList.index("end") > 0):
+        TextMemoryUsage -= sys.getsizeof(TextList.get(TextList.size() - 1)) / (1024**2)
         TextList.delete(END)
         gc.collect()
-        TextMemoryUsage -= abs(Before - After)
 
         if TextMemoryUsage <= TextMemoryLimit * 0.8:
             break
-def double_click_copy(event):
+
+def DoubleClickCopy(event):
     idx = TextList.curselection()
     global PauseMonitor
     if idx:
@@ -27,5 +31,9 @@ def double_click_copy(event):
         root.clipboard_clear()
         root.clipboard_append(selected)
         # root.after(1000, disable_pause)
-        
-TextList.bind("<Double-Button-1>", double_click_copy)
+
+def SelectFavorite():
+    print("Selected Favorite")
+
+TextList.bind("<Double-Button-1>", DoubleClickCopy)
+TextList.bind("<f>", SelectFavorite)
