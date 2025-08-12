@@ -12,54 +12,87 @@ CurrentKeys = set()
 KeyboardController = keyboard.Controller()
 MouseController = mouse.Controller()
 
-LastClip = None
 LastDisabled = 0
 TextMemoryUsage = 0
 CtrlKey = None
 DisableTime = 0
+FavoriteCount = 0
+TextData = []
 
 if platform.system() == 'Darwin':
     CtrlKey = keyboard.Key.cmd_l
 else:
     CtrlKey = keyboard.Key.ctrl_l
 
-def Handler(text):
-    global LastClip, TextMemoryUsage, DisableTime
+def Handler(Text):
+    global TextMemoryUsage, DisableTime, FavoriteCount
+    LastClip = None
 
     if DisableTime > 0:
         return
+
+    try:
+        LastClip = TextData[FavoriteCount][0]
+    except:
+        pass
     
-    if text != LastClip:
-        LastClip = text
-        TextList.insert(0, text)
-        TextMemoryUsage += sys.getsizeof(text) / (1024**2)
+    if Text == LastClip:
+        return
+    
+    TextData.insert(FavoriteCount, [
+        Text,
+        False
+    ])
+
+    TextList.insert(FavoriteCount, Text)
+    TextMemoryUsage += sys.getsizeof(Text) / (1024**2)
         
     while TextMemoryUsage > TextMemoryLimit and TextList.index("end") > 0:
         TextMemoryUsage -= sys.getsizeof(TextList.get(TextList.size() - 1)) / (1024**2)
         TextList.delete(END)
+        TextData.pop()
         gc.collect()
 
         if TextMemoryUsage <= TextMemoryLimit * 0.8:
             break
 
 def DoubleClickCopy(event):
-    idx = TextList.curselection()
-    global PauseMonitor, DisableTime
+    global DisableTime
+    Index = TextList.curselection()
 
     if DisableTime > 0:
         return
 
-    if idx:
-        PauseMonitor = True
-        selected = TextList.get(idx[0])
+    if Index:
+        selected = TextList.get(Index[0])
         root.clipboard_clear()
         root.clipboard_append(selected)
         DisableTime = 1
         # root.after(1000, disable_pause)
 
 def SelectFavorite(Event):
-    # print("Selected Favorite")
-    pass
+    global FavoriteCount
+
+    ListIndex = TextList.curselection()[0]
+    Data = TextData[ListIndex]
+    IsFavorite = Data[1]
+    Data[1] = not IsFavorite
+
+    if IsFavorite:
+        print("Unfavorited")
+        FavoriteCount -= 1
+        del TextData[ListIndex]
+        TextList.delete(ListIndex)
+        TextList.insert(FavoriteCount, Data[0])
+        TextData.insert(FavoriteCount, Data)
+    else:
+        print("Favorited")
+        del TextData[ListIndex]
+        TextList.delete(ListIndex)
+        TextList.insert(0, "*" + Data[0])
+        TextData.insert(0, Data)
+        FavoriteCount += 1
+        pass
 
 def Copy(Event):
     global DisableTime
@@ -67,45 +100,51 @@ def Copy(Event):
     print("copy")
     pass
 
-def ReleaseModifers():
-    KeyboardController.release(keyboard.Key.ctrl)
-    KeyboardController.release(keyboard.Key.alt)
-    KeyboardController.release(keyboard.Key.shift)
 
-    time.sleep(0.1)
-    pass
+def Paste():
+        KeyboardController.release(keyboard.Key.ctrl)
+        KeyboardController.release(keyboard.Key.alt)
+        KeyboardController.release(keyboard.Key.shift)
 
+        time.sleep(0.1)
 
-KeyboardController = keyboard.Controller()
-def PasteLast():
-    ReleaseModifers()
-    pyperclip.copy(TextList.get(1))
-
-    try:
         KeyboardController.press(keyboard.Key.ctrl)
         KeyboardController.press('v')
 
         KeyboardController.release(keyboard.Key.ctrl)
         KeyboardController.release('v')
-    except IndexError:
-        print("rip")
-    pass
 
-def CopyLast():
+def PasteLast():
     global DisableTime
 
     DisableTime = 1
-    ReleaseModifers()
+
+    pyperclip.copy(TextList.get(1))
+    Paste()
+    pyperclip.copy(TextList.get(0))
+
+def CopyLast():
+    global DisableTime
+    DisableTime = 1
+
     pyperclip.copy(TextList.get(1))
     print("Copied Last")
 
     pass
 
 def PasteLastFive():
+    global DisableTime
+    DisableTime = 1
+
     for i in range(5):
-        print("Paste")
-        pass
-    pass
+        Text = TextList.get(i)
+        if Text == "":
+            break
+        pyperclip.copy(Text)
+        KeyboardController.press(keyboard.Key.space)
+        KeyboardController.release(keyboard.Key.space)
+
+    pyperclip.copy(TextList.get(0))
 
 def OnPress(Key):
     CurrentKeys.add(Key)

@@ -102,9 +102,6 @@ def OnSelect(event):
 def SelectFavorite(Event):
     global FavoriteCount
 
-    if Event is None:
-        return
-
     ListIndex = ImageList.curselection()[0]
     DataValue = ImageData[ListIndex]
     IsFavorite = DataValue[2]
