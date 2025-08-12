@@ -10,8 +10,6 @@ import clipboard_monitor
 import threading
 from Gui import *
 
-Selection = None
-
 def upd():
     pass
 

@@ -99,7 +99,7 @@ def OnSelect(event):
     ImageDisplay.config(image=TkinterImage)
     ImageDisplay.image = TkinterImage
 
-def SelectFavorite(Event=any):
+def SelectFavorite(Event):
     global FavoriteCount
 
     if Event is None:
