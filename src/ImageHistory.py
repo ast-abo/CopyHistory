@@ -54,29 +54,25 @@ def Handler():
     CompressedImage = Compress(CopiedImage)
 
     ImageData.insert(FavoriteCount, [
-        "",
-        "",
+        base64.b64encode(CompressedImage).decode("utf-8"),
+        MegaBytes,
         False,
         f"Image taken at: {datetime.now()}"
     ])
-    ImageData[FavoriteCount][0] = base64.b64encode(CompressedImage).decode("utf-8")
     SavedData[1].insert(FavoriteCount, ImageData[FavoriteCount])
     with open('Storage.json', "w") as File:
-        SavedData = json.dump(SavedData, File)
-    ImageData[FavoriteCount][0] = CompressedImage
-    ImageData[FavoriteCount][1] = MegaBytes
-    ImageList.insert(FavoriteCount, ImageData[FavoriteCount][3])
-    
+        json.dump(SavedData, File)
 
+    ImageList.insert(FavoriteCount, ImageData[FavoriteCount][3])
     ImageList.selection_clear(0, END)
     ImageList.select_set(0)
     ImageList.see(0)
     ImageMemoryUsage += len(CompressedImage) / (1024**2) + MegaBytes
     while (ImageMemoryUsage > ImageMemoryLimit and len(ImageData) > 0):
         Data = ImageData.pop()
-        SavedData.pop()
+        SavedData[1].pop()
         with open('Storage.json', "w") as File:
-            SavedData = json.dump(SavedData, File)
+            json.dump(SavedData, File)
         ImageMemoryUsage -= len(Data[0]) / (1024**2) + Data[1]
         
         if ImageMemoryUsage <= ImageMemoryLimit * 0.8:
@@ -93,7 +89,8 @@ def OnSelect(event):
             return
         print(f"Index {Selection[0]} is out of range.")
 
-    DecompressedImage = Decompress(ImageData[Selection[0]][0])
+    DecodedImage = base64.b64decode(ImageData[Selection[0]][0])
+    DecompressedImage = Decompress(DecodedImage)
     RgbImage = cv2.cvtColor(DecompressedImage, cv2.COLOR_BGR2RGB)
     PilImage = Image.fromarray(RgbImage)
     TkinterImage = ImageTk.PhotoImage(PilImage)
@@ -113,29 +110,37 @@ def SelectFavorite(Event):
         FavoriteCount -= 1
 
         del ImageData[ListIndex]
+        del SavedData[1][ListIndex]
         ImageList.delete(ListIndex)
 
         ImageList.insert(FavoriteCount, DataValue[3])
         ImageData.insert(FavoriteCount, DataValue)
+        SavedData[1].insert(FavoriteCount, DataValue)
+
+        with open('Storage.json', "w") as File:
+            json.dump(SavedData, File)
     else:
         if FavoriteCount == 5:
             return
         FavoriteCount += 1
         DataValue[2] = True
-        print("Favorited")
 
         del ImageData[ListIndex]
+        del SavedData[1][ListIndex]
         ImageList.delete(ListIndex)
 
         ImageList.insert(0, "*" + DataValue[3])
         ImageData.insert(0, DataValue)
+        SavedData[1].insert(0, DataValue)
+        with open('Storage.json', "w") as File:
+            json.dump(SavedData, File)
         
     
 def LoadData():
     global FavoriteCount, ImageMemoryUsage, SavedData
 
     for Item in reversed(SavedData[1]):
-        if Item[1]:
+        if Item[2]:
             FavoriteCount += 1
             ImageData.insert(0, Item)
             ImageList.insert(0, "*" + Item[3])
