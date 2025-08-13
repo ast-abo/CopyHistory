@@ -1,6 +1,35 @@
+# Dependencies
+- Pyinstaller
+-- pip install pyinstaller
+
 
 # Build Instructions
-pyinstaller --onefile --noconsole CopyHistory.py
+## Windows/Linux
+```
+git clone https://github.com/ast-abo/CopyHistory
+cd CopyHistory
+pyinstaller --onefile --noconsole src/CopyHistory.py
+cd dist
+CopyHistory.exe
+```
+
+## Mac
+```
+git clone https://github.com/ast-abo/CopyHistory
+cd CopyHistory
+pyinstaller --onefile --noconsole src/CopyHistory.py
+cd dist
+./CopyHistory
+```
+
+# Features
+- Text copy history
+- Image copy history
+- File copy history
+- Favoriting (F to favorite)
+- Paste last 5 items (Ctrl + Alt + 5)
+- Paste last text (Ctrl + Alt + v) 
+- Copy last text (Ctrl + Alt + c)
 
 # Optimization Techniques
 
@@ -10,12 +39,3 @@ I removed references until the memory limit was below 80% of the limit.
 
 ## Data Compression
 I compressed images as they were stored and uncompressed them as needed to limit memory use in storage.
-
-# Features
-- Text copy history
-- Image copy history
-- File copy history
-- Favoriting
-- Paste last 5 items
-- Paste last item
-- Paste item at the end of the list
