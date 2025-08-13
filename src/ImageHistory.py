@@ -1,16 +1,20 @@
 from Gui import *
-import gc
 from PIL import Image, ImageGrab, ImageTk
 import numpy as np
 import cv2
 from Config import ImageMemoryLimit
 import hashlib
 from datetime import datetime
+import json
+import base64
 
 ImageData = []
 LastImageClip = None
 ImageMemoryUsage = 0
 FavoriteCount = 0
+SavedData = None
+with open('Storage.json', "r") as File:
+    SavedData = json.load(File)
 
 def Compress(Image):
     Array = np.array(Image, dtype=np.uint8)
@@ -25,7 +29,7 @@ def ImageHash(Image):
     return hashlib.md5(Image.tobytes()).hexdigest()
 
 def Handler():
-    global LastImageClip, ImageMemoryUsage, FavoriteCount
+    global LastImageClip, ImageMemoryUsage, FavoriteCount, SavedData
 
     CopiedImage = ImageGrab.grabclipboard()
     if not isinstance(CopiedImage, Image.Image):
@@ -50,41 +54,38 @@ def Handler():
     CompressedImage = Compress(CopiedImage)
 
     ImageData.insert(FavoriteCount, [
-        CompressedImage,
-        MegaBytes,
+        "",
+        "",
         False,
         f"Image taken at: {datetime.now()}"
     ])
+    ImageData[FavoriteCount][0] = base64.b64encode(CompressedImage).decode("utf-8")
+    SavedData[1].insert(FavoriteCount, ImageData[FavoriteCount])
+    with open('Storage.json', "w") as File:
+        SavedData = json.dump(SavedData, File)
+    ImageData[FavoriteCount][0] = CompressedImage
+    ImageData[FavoriteCount][1] = MegaBytes
+    ImageList.insert(FavoriteCount, ImageData[FavoriteCount][3])
     
-    ImageList.insert(FavoriteCount, ImageData[0][3])
+
     ImageList.selection_clear(0, END)
     ImageList.select_set(0)
     ImageList.see(0)
     ImageMemoryUsage += len(CompressedImage) / (1024**2) + MegaBytes
     while (ImageMemoryUsage > ImageMemoryLimit and len(ImageData) > 0):
         Data = ImageData.pop()
+        SavedData.pop()
+        with open('Storage.json', "w") as File:
+            SavedData = json.dump(SavedData, File)
         ImageMemoryUsage -= len(Data[0]) / (1024**2) + Data[1]
-        ImageList.delete(END)
-        gc.collect()
         
         if ImageMemoryUsage <= ImageMemoryLimit * 0.8:
             break
 
-def DoubleClickCopy(event):
-    idx = TextList.curselection()
-    #global PauseMonitor
-
-    if idx:
-        #PauseMonitor = True
-        selected = TextList.get(idx[0])
-        root.clipboard_clear()
-        root.clipboard_append(selected)
-        #root.after(2000, disable_pause)
-
 def OnSelect(event):
     global Selection, ImageMemoryUsage
     Selection = ImageList.curselection()
-
+    
     try:
         value = ImageData[Selection[0]]
     except IndexError:
@@ -105,26 +106,46 @@ def SelectFavorite(Event):
     ListIndex = ImageList.curselection()[0]
     DataValue = ImageData[ListIndex]
     IsFavorite = DataValue[2]
-    DataValue[2] = not IsFavorite
 
     if IsFavorite:
+        DataValue[2] = False
         print("Unfavorited")
         FavoriteCount -= 1
+
         del ImageData[ListIndex]
         ImageList.delete(ListIndex)
+
         ImageList.insert(FavoriteCount, DataValue[3])
         ImageData.insert(FavoriteCount, DataValue)
     else:
+        if FavoriteCount == 5:
+            return
+        FavoriteCount += 1
+        DataValue[2] = True
         print("Favorited")
+
         del ImageData[ListIndex]
         ImageList.delete(ListIndex)
+
         ImageList.insert(0, "*" + DataValue[3])
         ImageData.insert(0, DataValue)
-        FavoriteCount += 1
-        pass
+        
     
+def LoadData():
+    global FavoriteCount, ImageMemoryUsage, SavedData
 
+    for Item in reversed(SavedData[1]):
+        if Item[1]:
+            FavoriteCount += 1
+            ImageData.insert(0, Item)
+            ImageList.insert(0, "*" + Item[3])
+        else:
+            ImageData.insert(FavoriteCount, Item)
+            ImageList.insert(FavoriteCount, Item[3])
+
+    # ImageMemoryUsage
+        
+LoadData()
 
 ImageList.bind("<<ListboxSelect>>", OnSelect)
-ImageList.bind("<Double-Button-1>", DoubleClickCopy)
 ImageList.bind("<f>", SelectFavorite)

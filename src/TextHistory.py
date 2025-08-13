@@ -6,17 +6,20 @@ import pyperclip
 import time
 import threading
 from pynput import keyboard, mouse
-from datetime import datetime
 import platform
+import json
 CurrentKeys = set()
 KeyboardController = keyboard.Controller()
 MouseController = mouse.Controller()
 
-LastDisabled = 0
 TextMemoryUsage = 0
 CtrlKey = None
 DisableTime = 0
 FavoriteCount = 0
+SavedData = None
+with open('Storage.json', "r") as File:
+    SavedData = json.load(File)
+
 TextData = []
 
 if platform.system() == 'Darwin':
@@ -43,8 +46,11 @@ def Handler(Text):
         Text,
         False
     ])
-
+    SavedData[0].insert(FavoriteCount, TextData[FavoriteCount])
+    with open("Storage.json", "w") as File:
+        json.dump(SavedData, File)
     TextList.insert(FavoriteCount, Text)
+
     TextMemoryUsage += sys.getsizeof(Text) / (1024**2)
         
     while TextMemoryUsage > TextMemoryLimit and TextList.index("end") > 0:
@@ -73,31 +79,45 @@ def DoubleClickCopy(event):
 def SelectFavorite(Event):
     global FavoriteCount
 
-    ListIndex = TextList.curselection()[0]
+    try:
+        ListIndex = TextList.curselection()[0]
+    except:
+        return
     Data = TextData[ListIndex]
     IsFavorite = Data[1]
-    Data[1] = not IsFavorite
 
     if IsFavorite:
-        print("Unfavorited")
+        Data[1] = False
         FavoriteCount -= 1
         del TextData[ListIndex]
+        del SavedData[0][ListIndex]
         TextList.delete(ListIndex)
+
         TextList.insert(FavoriteCount, Data[0])
         TextData.insert(FavoriteCount, Data)
+        SavedData[0].insert(FavoriteCount, Data)
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
+        
     else:
-        print("Favorited")
+        if FavoriteCount == 5:
+            return
+        Data[1] = True
         del TextData[ListIndex]
+        del SavedData[0][ListIndex]
         TextList.delete(ListIndex)
+
         TextList.insert(0, "*" + Data[0])
         TextData.insert(0, Data)
+        SavedData[0].insert(0, Data)
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
+
         FavoriteCount += 1
-        pass
 
 def Copy(Event):
     global DisableTime
     DisableTime = 1
-    print("copy")
     pass
 
 
@@ -128,7 +148,6 @@ def CopyLast():
     DisableTime = 1
 
     pyperclip.copy(TextList.get(1))
-    print("Copied Last")
 
     pass
 
@@ -174,6 +193,23 @@ def DecreaseDisableTime():
         if DisableTime > 0:
             time.sleep(0.1)
             DisableTime -= 0.1
+
+def LoadData():
+    global FavoriteCount, TextMemoryUsage
+
+    for Item in reversed(SavedData[0]):
+        if Item[1]:
+            FavoriteCount += 1
+            TextData.insert(0, Item)
+            TextList.insert(0, "*" + Item[0])
+        else:
+            TextData.insert(FavoriteCount, Item)
+            TextList.insert(FavoriteCount, Item[0])
+
+    TextMemoryUsage += sys.getsizeof(Text) / (1024**2)
+        
+        
+LoadData()
 
 Listener = keyboard.Listener(on_press=OnPress, on_release=OnRelease)
 DisableThread = threading.Thread(target=DecreaseDisableTime, daemon=True)

@@ -3,9 +3,15 @@ from tkinter import filedialog
 import shutil
 import os
 import threading
+import json
+from Config import FileMemoryLimit
 
 FileData = []
 FavoriteCount = 0
+SavedData = None
+
+with open('Storage.json', "r") as File:
+    SavedData = json.load(File)
 
 def Handler(Files):
     global FileData, FavoriteCount
@@ -23,7 +29,10 @@ def Handler(Files):
             File,
             False
         ])
-        FileList.insert(FavoriteCount, FileData[0][0])
+        FileList.insert(FavoriteCount, FileData[FavoriteCount][0])
+        SavedData[2].insert(FavoriteCount, FileData[FavoriteCount])
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
 
 
 def DoubleClickCopy(event):
@@ -40,28 +49,46 @@ def DoubleClickCopy(event):
         threading.Thread(target=shutil.copy, args=(Source, Destination)).start()
 
 def SelectFavorite(Event):
-    global FavoriteCount
+    global FavoriteCount, SavedData
 
     ListIndex = FileList.curselection()[0]
     Data = FileData[ListIndex]
     IsFavorite = Data[1]
-    Data[1] = not IsFavorite
 
     if IsFavorite:
+        Data[1] = False
         print("Unfavorited")
         FavoriteCount -= 1
+
         del FileData[ListIndex]
+        del SavedData[2][ListIndex]
         FileList.delete(ListIndex)
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
+
         FileList.insert(FavoriteCount, Data[0])
         FileData.insert(FavoriteCount, Data)
+        SavedData[2].insert(FavoriteCount, Data)
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
     else:
+        if FavoriteCount == 5:
+            return
+        FavoriteCount += 1
+        Data[1] = True
         print("Favorited")
+
         del FileData[ListIndex]
         FileList.delete(ListIndex)
+        del SavedData[2][ListIndex]
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
+
         FileList.insert(0, "*" + Data[0])
         FileData.insert(0, Data)
-        FavoriteCount += 1
-        pass
+        SavedData[2].insert(0, Data)
+        with open("Storage.json", "w") as file:
+            json.dump(SavedData, file)
 
 def OpenDirectory():
     Path = filedialog.askdirectory(
@@ -71,6 +98,26 @@ def OpenDirectory():
     if Path:
         print(f"Selected directory: {Path}")
         PasteTo.configure(text=Path)
+
+def LoadData():
+    global FavoriteCount, FileMemoryLimit
+    ItemCount = 0
+    for Item in reversed(SavedData[2]):
+        if not os.path.isfile(Item[0]):
+            del SavedData[2][ItemCount]
+            with open("Storage.json", "w") as file:
+                json.dump(SavedData, file)
+            continue
+        ItemCount += 1
+        if Item[1]:
+            FavoriteCount += 1
+            FileData.insert(0, Item)
+            FileList.insert(0, "*" + Item[0])
+        else:
+            FileData.insert(FavoriteCount, Item)
+            FileList.insert(FavoriteCount, Item[0])
+        
+LoadData()
         
 OpenFileManager.configure(command=OpenDirectory)
 FileList.bind("<Double-Button-1>", DoubleClickCopy)
