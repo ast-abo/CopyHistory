@@ -28,7 +28,7 @@ else:
     CtrlKey = keyboard.Key.ctrl_l
 
 def Handler(Text):
-    global TextMemoryUsage, DisableTime, FavoriteCount
+    global TextMemoryUsage, DisableTime, FavoriteCount, SavedData
     LastClip = None
 
     if DisableTime > 0:
@@ -57,7 +57,6 @@ def Handler(Text):
         TextMemoryUsage -= sys.getsizeof(TextList.get(TextList.size() - 1)) / (1024**2)
         TextList.delete(END)
         TextData.pop()
-        gc.collect()
 
         if TextMemoryUsage <= TextMemoryLimit * 0.8:
             break

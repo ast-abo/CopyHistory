@@ -71,6 +71,7 @@ def Handler():
     while (ImageMemoryUsage > ImageMemoryLimit and len(ImageData) > 0):
         Data = ImageData.pop()
         SavedData[1].pop()
+        ImageList.delete(END)
         with open('Storage.json', "w") as File:
             json.dump(SavedData, File)
         ImageMemoryUsage -= len(Data[0]) / (1024**2) + Data[1]
@@ -87,7 +88,6 @@ def OnSelect(event):
     except IndexError:
         if not Selection:
             return
-        print(f"Index {Selection[0]} is out of range.")
 
     DecodedImage = base64.b64decode(ImageData[Selection[0]][0])
     DecompressedImage = Decompress(DecodedImage)
@@ -98,7 +98,7 @@ def OnSelect(event):
     ImageDisplay.image = TkinterImage
 
 def SelectFavorite(Event):
-    global FavoriteCount
+    global FavoriteCount, SavedData
 
     ListIndex = ImageList.curselection()[0]
     DataValue = ImageData[ListIndex]
@@ -106,7 +106,6 @@ def SelectFavorite(Event):
 
     if IsFavorite:
         DataValue[2] = False
-        print("Unfavorited")
         FavoriteCount -= 1
 
         del ImageData[ListIndex]

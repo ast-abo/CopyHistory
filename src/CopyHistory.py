@@ -1,6 +1,12 @@
-import tracemalloc
+import os
+import json
 
-tracemalloc.start()
+Default = [[], [], []]  # Change this to match your program's needs
+
+if not os.path.exists("Storage.json"):
+    with open("Storage.json", "w") as f:
+        json.dump(Default, f)
+
 
 import ImageHistory
 import FileHistory

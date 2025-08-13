@@ -4,17 +4,19 @@ import shutil
 import os
 import threading
 import json
+import sys
 from Config import FileMemoryLimit
 
 FileData = []
 FavoriteCount = 0
 SavedData = None
+FileMemoryUsage = 0
 
 with open('Storage.json', "r") as File:
     SavedData = json.load(File)
 
 def Handler(Files):
-    global FileData, FavoriteCount
+    global FileData, FavoriteCount, FileMemoryUsage, SavedData
     LastFile = None
     for File in Files:
         try:
@@ -33,6 +35,16 @@ def Handler(Files):
         SavedData[2].insert(FavoriteCount, FileData[FavoriteCount])
         with open("Storage.json", "w") as file:
             json.dump(SavedData, file)
+
+        while FileMemoryUsage > FileMemoryLimit and FileList.index("end") > 0:
+            FileMemoryUsage -= sys.getsizeof(TextList.get(TextList.size() - 1)) / (1024**2)
+            FileList.delete(END)
+            FileData.pop()
+            with open('Storage.json', "w") as File:
+                json.dump(SavedData, File)
+
+        if FileMemoryUsage <= FileMemoryLimit * 0.8:
+            break
 
 
 def DoubleClickCopy(event):
@@ -57,7 +69,6 @@ def SelectFavorite(Event):
 
     if IsFavorite:
         Data[1] = False
-        print("Unfavorited")
         FavoriteCount -= 1
 
         del FileData[ListIndex]
@@ -76,7 +87,6 @@ def SelectFavorite(Event):
             return
         FavoriteCount += 1
         Data[1] = True
-        print("Favorited")
 
         del FileData[ListIndex]
         FileList.delete(ListIndex)
@@ -96,7 +106,6 @@ def OpenDirectory():
         title="Select a directory"
     )
     if Path:
-        print(f"Selected directory: {Path}")
         PasteTo.configure(text=Path)
 
 def LoadData():
