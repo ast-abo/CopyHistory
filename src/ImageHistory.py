@@ -146,8 +146,6 @@ def LoadData():
         else:
             ImageData.insert(FavoriteCount, Item)
             ImageList.insert(FavoriteCount, Item[3])
-
-    # ImageMemoryUsage
         
 LoadData()
 
