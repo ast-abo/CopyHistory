@@ -1,75 +1,13 @@
-# Byte-compiled / optimized files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging artifacts
 dist/
 build/
-*.egg-info/
-*.egg
-.eggs/
-pip-wheel-metadata/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Test and coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-.nosetests.xml
-coverage.xml
-*.cover
-.pytest_cache/
-.hypothesis/
-
-# Virtual environments
-venv/
-env/
 .venv/
-ENV/
-env.bak/
-venv.bak/
 
-# IDE/editor config
 .vscode/
-.idea/
 
-# System files
-.DS_Store
-
-# Logs, temp, and backups
-*.log
-*.tmp
-*.swp
-*.bak
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Local configuration, secrets, and env vars
-.env
 *.env
-local_settings.py
-config.py
-secrets.py
+.venv
 
-# Database files (e.g., Django default)
-db.sqlite3
-db.sqlite3-journal
-
-# Documentation builds
-docs/_build/
-
-# PyInstaller
 *.manifest
 *.spec
 
