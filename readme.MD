@@ -1,8 +1,3 @@
-# Dependencies
-- Pyinstaller
--- pip install pyinstaller
-
-
 # Build Instructions
 ## Windows/Linux
 ```
