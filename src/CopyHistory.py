@@ -1,7 +1,7 @@
 import os
 import json
 
-Default = [[], [], []]  # Change this to match your program's needs
+Default = [[], [], []]
 
 if not os.path.exists("Storage.json"):
     with open("Storage.json", "w") as f:

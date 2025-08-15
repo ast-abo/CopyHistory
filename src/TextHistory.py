@@ -159,6 +159,7 @@ def PasteLastFive():
         if Text == "":
             break
         pyperclip.copy(Text)
+        Paste()
         KeyboardController.press(keyboard.Key.space)
         KeyboardController.release(keyboard.Key.space)
 
