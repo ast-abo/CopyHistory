@@ -8,20 +8,11 @@ cd dist
 CopyHistory.exe
 ```
 
-## Mac
-```
-git clone https://github.com/ast-abo/CopyHistory
-cd CopyHistory
-pyinstaller --onefile --noconsole src/CopyHistory.py
-cd dist
-./CopyHistory
-```
-
 # Features
 - Text copy history
 - Image copy history
 - File copy history
-- Favoriting (F to favorite)
+- Favoriting (F to favorite up to 5 per tab)
 - Paste last 5 items (Ctrl + Alt + 5)
 - Paste last text (Ctrl + Alt + v) 
 - Copy last text (Ctrl + Alt + c)
