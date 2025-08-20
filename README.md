@@ -20,8 +20,7 @@ CopyHistory.exe
 # Optimization Techniques
 
 ## Memory limits
-I kept track of the memory usage of images and files when an image was added and it went about the memory limit
-I removed references until the memory limit was below 80% of the limit.
+Cleared arrays to free up memory when it hit the hard limit.
 
 ## Data Compression
-I compressed images as they were stored and uncompressed them as needed to limit memory use in storage.
+Image compression in order to minimize the amount of memory used per image.
